@@ -25,5 +25,7 @@ Print your current data
 
 Dev env
 -------
+create virtual env and install requirements
+
     virtualenv -p /usr/bin/python3.5 env
     pip install -r requirements.txt

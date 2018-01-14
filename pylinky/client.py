@@ -157,7 +157,7 @@ class LinkyClient(object):
         # 12 last month
         self._data["yearly"] = self._get_data_per_year()
 
-    def get_data(self, contract=None):
+    def get_data(self):
         return self._data
 
     def close_session(self):
