@@ -4,7 +4,6 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 from pip.req import parse_requirements
-from pip.download import PipSession
 
 here = path.abspath(path.dirname(__file__))
 

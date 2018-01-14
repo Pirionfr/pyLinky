@@ -122,13 +122,22 @@ class LinkyClient(object):
         # Post login page
         self._post_login_page()
 
-        #last 30 days
+
         today = datetime.date.today()
-        daily_data = self._get_data_per_day((today - relativedelta(days=30)).strftime("%d/%m/%Y"),
+        # last 2 days
+        self._data["hourly"] = self._get_data_per_day((today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+                                                     today.strftime("%d/%m/%Y"))
+
+        #last 30 days
+        self._data["daily"] = self._get_data_per_day((today - relativedelta(days=30)).strftime("%d/%m/%Y"),
                                                        (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
 
+        #12 last month
+        self._data["monthly"] = self._get_data_per_month((today - relativedelta(months=12)).strftime("%d/%m/%Y"),
+                                                         (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
 
-        self._data["daily"] = daily_data
+        #12 last month
+        self._data["yearly"] = self._get_data_per_year()
 
 
     def get_data(self, contract=None):

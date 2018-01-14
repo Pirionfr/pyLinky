@@ -1,6 +1,6 @@
 import argparse
-import json
 import sys
+import json
 
 from pylinky import LinkyClient
 
@@ -23,8 +23,8 @@ def main():
         return 1
     finally:
         client.close_session()
-    if not client.get_data():
-        return 2
+    print(json.dumps(client.get_data(), indent=2))
+
 
 if __name__ == '__main__':
     sys.exit(main())
