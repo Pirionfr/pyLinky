@@ -5,10 +5,8 @@ from dateutil.relativedelta import relativedelta
 import requests
 
 
-
 LOGIN_URL = "https://espace-client-connexion.enedis.fr/auth/UI/Login"
 HOST = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers"
-HOME_URL = '{}/accueil'.format(HOST)
 DATA_URL = "{}/suivi-de-consommation".format(HOST)
 
 REQ_PART = "lincspartdisplaycdc_WAR_lincspartcdcportlet"
@@ -45,7 +43,7 @@ class LinkyClient(object):
         try:
             row_res = self._session.post(LOGIN_URL,
                                           data=data,
-                                          allow_redirects=False);
+                                          allow_redirects=False)
 
         except OSError:
             raise PyLinkyError("Can not submit login form")
@@ -100,20 +98,41 @@ class LinkyClient(object):
 
     def _get_data_per_hour(self, start_date, end_date):
         """Retreives hourly energy consumption data."""
-        return self._get_data('urlCdcHeure', start_date, end_date)
+        return self._format_data(self._get_data('urlCdcHeure', start_date, end_date), 'hours', "%H:%M")
 
     def _get_data_per_day(self, start_date, end_date):
         """Retreives daily energy consumption data."""
-        return self._get_data( 'urlCdcJour', start_date, end_date)
+        return self._format_data(self._get_data('urlCdcJour', start_date, end_date), 'days', "%d %b")
 
     def _get_data_per_month(self, start_date, end_date):
         """Retreives monthly energy consumption data."""
-        return self._get_data('urlCdcMois', start_date, end_date)
+        return self._format_data(self._get_data('urlCdcMois', start_date, end_date), 'months', "%b")
 
     def _get_data_per_year(self):
         """Retreives yearly energy consumption data."""
-        return self._get_data('urlCdcAn')
+        return self._format_data(self._get_data('urlCdcAn'), 'years', "%Y")
 
+    def _format_data(self, data, format_data, time_format):
+        result = []
+
+        # Extract start date and parse it
+        start_date = datetime.datetime.strptime(data.get("periode").get("dateDebut"), "%d/%m/%Y").date()
+
+        # Calculate final start date using the "offset" attribute returned by the API
+        inc = 1
+        if format_data == 'hours':
+            inc = 0.5
+
+        kwargs = {format_data: data.get('decalage') * inc}
+        start_date = start_date - relativedelta(**kwargs)
+
+        # Generate data
+        for ordre, value in enumerate(data.get('data')):
+            kwargs = {format_data: ordre * inc}
+            result.append({"time": ((start_date + relativedelta(**kwargs)).strftime(time_format)),
+                           "conso": (value.get('valeur') if value.get('valeur') > 0 else 0)})
+
+        return result
 
     def fetch_data(self):
         """Get the latest data from Enedis."""
@@ -122,23 +141,21 @@ class LinkyClient(object):
         # Post login page
         self._post_login_page()
 
-
         today = datetime.date.today()
         # last 2 days
-        self._data["hourly"] = self._get_data_per_day((today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+        self._data["hourly"] = self._get_data_per_hour((today - relativedelta(days=1)).strftime("%d/%m/%Y"),
                                                      today.strftime("%d/%m/%Y"))
 
-        #last 30 days
+        # last 30 days
         self._data["daily"] = self._get_data_per_day((today - relativedelta(days=30)).strftime("%d/%m/%Y"),
                                                        (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
 
-        #12 last month
+        # 12 last month
         self._data["monthly"] = self._get_data_per_month((today - relativedelta(months=12)).strftime("%d/%m/%Y"),
                                                          (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
 
-        #12 last month
+        # 12 last month
         self._data["yearly"] = self._get_data_per_year()
-
 
     def get_data(self, contract=None):
         return self._data
