@@ -1,20 +1,21 @@
-# Always prefer setuptools over distutils
+import sys
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
 from pip.req import parse_requirements
+from pip.download import PipSession
 
 here = path.abspath(path.dirname(__file__))
 
 
-install_reqs = parse_requirements(path.join(here, 'requirements.txt'))
+install_reqs = parse_requirements(path.join(here, 'requirements.txt'), session=PipSession())
 
-if sys.version_info < (3,4):
+if sys.version_info < 3.4:
     sys.exit('Sorry, Python < 3.4 is not supported')
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
