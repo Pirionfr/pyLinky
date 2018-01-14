@@ -20,7 +20,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='pylinky',
-      version='0.1.0',
+      version='0.1.1',
       description='Get your consumption data from your Enedis account (www.enedis.fr)',
       long_description=long_description,
       author='Dimitri Capitaine',
