@@ -1,15 +1,10 @@
 import sys
 from setuptools import setup, find_packages
-# To use a consistent encoding
 from codecs import open
 from os import path
-from pip.req import parse_requirements
-from pip.download import PipSession
 
 here = path.abspath(path.dirname(__file__))
 
-
-install_reqs = parse_requirements(path.join(here, 'requirements.txt'), session=PipSession())
 
 if sys.version_info < (3, 4):
     sys.exit('Sorry, Python < 3.4 is not supported')
@@ -20,7 +15,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='pylinky',
-      version='0.1.1',
+      version='0.1.3',
       description='Get your consumption data from your Enedis account (www.enedis.fr)',
       long_description=long_description,
       author='Dimitri Capitaine',
@@ -35,8 +30,9 @@ setup(
           ]
       },
       license='Apache 2.0',
-      install_requires=[str(r.req) for r in install_reqs],
+      install_requires=['python-dateutil','requests'],
       classifiers=[
           'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
       ]
 )

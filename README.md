@@ -1,3 +1,4 @@
+
 pyLinky
 =======
 Get your consumption data from your Enedis account (www.enedis.fr) 
@@ -21,7 +22,6 @@ Usage
 Print your current data
 
     pylink -u <USERNAME> -p <PASWORD>
-
 
 Dev env
 -------
