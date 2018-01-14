@@ -11,7 +11,7 @@ here = path.abspath(path.dirname(__file__))
 
 install_reqs = parse_requirements(path.join(here, 'requirements.txt'), session=PipSession())
 
-if sys.version_info < 3.4:
+if sys.version_info < (3, 4):
     sys.exit('Sorry, Python < 3.4 is not supported')
 
 # Get the long description from the README file
