@@ -115,6 +115,10 @@ class LinkyClient(object):
     def _format_data(self, data, format_data, time_format):
         result = []
 
+        # Prevent from non existing data yet
+        if not data:
+            return []
+
         # Extract start date and parse it
         start_date = datetime.datetime.strptime(data.get("periode").get("dateDebut"), "%d/%m/%Y").date()
 
