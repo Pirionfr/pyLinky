@@ -10,7 +10,7 @@ if sys.version_info < (3, 4):
     sys.exit('Sorry, Python < 3.4 is not supported')
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
