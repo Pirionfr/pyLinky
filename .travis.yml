@@ -16,4 +16,5 @@ deploy:
   on:
       tags: true
 
-
+script:
+ - echo "Done"

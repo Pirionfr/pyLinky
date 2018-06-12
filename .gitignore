@@ -22,6 +22,7 @@ sdist/
 var/
 wheels/
 *.egg-info/
+*.pytest_cache/
 .installed.cfg
 *.egg
 
