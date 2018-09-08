@@ -8,7 +8,7 @@ def main():
     """Main function"""
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--username',
-                        required=True, help='Hydro Quebec username')
+                        required=True, help='enedis username')
     parser.add_argument('-p', '--password',
                         required=True, help='Password')
     args = parser.parse_args()

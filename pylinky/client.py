@@ -17,12 +17,13 @@ class PyLinkyError(Exception):
 
 
 class LinkyClient(object):
-    def __init__(self, username, password, session=None):
+    def __init__(self, username, password, session=None, timeout=None):
         """Initialize the client object."""
         self.username = username
         self.password = password
         self._session = session
         self._data = {}
+        self._timeout = timeout
 
     def _get_httpsession(self):
         """Set http session."""
@@ -41,9 +42,10 @@ class LinkyClient(object):
         }
 
         try:
-            row_res = self._session.post(LOGIN_URL,
-                                          data=data,
-                                          allow_redirects=False)
+            self._session.post(LOGIN_URL,
+                                data=data,
+                                allow_redirects=False,
+                                timeout= self._timeout)
 
         except OSError:
             raise PyLinkyError("Can not submit login form")
@@ -77,13 +79,15 @@ class LinkyClient(object):
             raw_res = self._session.post(DATA_URL,
                                          data=data,
                                          params=params,
-                                         allow_redirects=False)
+                                         allow_redirects=False,
+                                         timeout=self._timeout)
 
             if 300 <= raw_res.status_code < 400:
                 raw_res = self._session.post(DATA_URL,
                                              data=data,
                                              params=params,
-                                             allow_redirects=False)
+                                             allow_redirects=False,
+                                             timeout=self._timeout)
         except OSError:
             raise PyLinkyError("Can not get data")
         try:
