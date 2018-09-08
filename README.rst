@@ -35,7 +35,7 @@ Usage
 -----
 Print your current data
 
-    pylink -u <USERNAME> -p <PASWORD>
+    pylink -u <USERNAME> -p <PASSWORD>
 
 Dev env
 -------
