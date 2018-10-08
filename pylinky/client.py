@@ -29,7 +29,7 @@ class LinkyClient(object):
         """Set http session."""
         if self._session is None:
             self._session = requests.Session()
-
+            self._post_login_page()
 
     def _post_login_page(self):
         """Login to enedis."""
@@ -146,8 +146,6 @@ class LinkyClient(object):
         """Get the latest data from Enedis."""
         # Get http session
         self._get_httpsession()
-        # Post login page
-        self._post_login_page()
 
         today = datetime.date.today()
         # last 2 days
@@ -171,3 +169,4 @@ class LinkyClient(object):
     def close_session(self):
         """Close current session."""
         self._session.close()
+        self._session = None
