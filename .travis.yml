@@ -13,7 +13,8 @@ deploy:
   user: pirion
   password:
     secure: fPy+BmNMh++Ri/QTI021AZSbCJRJxbp/s6+01LdASEMC8uAhZufm5Rn+4c1uMgXoIwuqX/WLT56qg6R14zRdYEISkWduETET2uyR2YHi3/ClSIIoZD2mgRyQoRF/BWX4+XRTvXwYufD5AZIJPCumLme7m2wv/pZxCfAumv4yba9zoA081uPJvaEeOztME08GQpztS5yfBnYboqm1D4rOEDMSFY3SN00NpQN1mDl5Wy+TsU/FBKxgqt4FqCX5H0ZU/kqu6fL2seOp+PvmR7e6dG/PTXYrTZKvzS6tsaJVf6PECTaRsHZqQvuRL4Jn8Xzu7PQ4iT99FiHS2d7MwXQu/D+IkeUO56QGMKmr3t2YGzIPr+nIT7CyasMemv6iBXMLFxOhV1pmEy4g9CQOkmmlpvHnq3aSp5RbttIX6jzinc/u2aEw6QaO2PFeVAdZqIR1mVHZvAFX8El8U5t7mnyO3Q2Ekn+7Taw46Fms4UPf4iuxRusTpv5Gq/EZ+QMXgFx7LelZLvd5dQXHIYbe4uM63E5MfI0u8RyIftitkjHW3uvAcqVQxuNyXDMGpGXfZG8eaZmJJNGw06wwlMo3KP522w/whbV5yLRfxNj3bdT+i2mFN5h6ku2Ux8/0YLCMwdbgCnRC2+GsgbpN8P6K7R1R9EJcr51WDtpN6mU99mZ4IOM=
-  distributions: "bdist_egg"
+  distributions: "sdist bdist_wheel bdist_egg"
+  skip_existing: true
   on:
     tags: true
 
