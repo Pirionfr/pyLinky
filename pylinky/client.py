@@ -173,6 +173,10 @@ class LinkyClient(object):
         for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
             self._data[t] = self.get_data_per_period(t)
 
+    def login(self):
+        # Get http session
+        self._get_httpsession()
+
     def get_data(self):
         return self._data
 
