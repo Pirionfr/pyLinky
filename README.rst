@@ -2,8 +2,8 @@
 pyLinky
 =======
 
-.. image:: https://travis-ci.org/Pirionfr/pyLinky.svg?branch=master
-    :target: https://travis-ci.org/Pirionfr/pyLinky
+.. image:: https://travis-ci.org/LudovicRousseau/pyLinky.svg?branch=master
+    :target: https://travis-ci.org/LudovicRousseau/pyLinky
 
 .. image:: https://img.shields.io/pypi/v/pyLinky.svg
     :target: https://pypi.python.org/pypi/pyLinky
