@@ -26,7 +26,7 @@ setup(
       packages=find_packages(),
       entry_points={
           'console_scripts': [
-              'pylink = pylinky.__main__:main'
+              'pylinky = pylinky.__main__:main'
           ]
       },
       license='Apache 2.0',
