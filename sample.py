@@ -23,17 +23,15 @@ import json
 
 from pylinky import LinkyClient
 
+
 def main():
     """Main function"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--username',
-                        required=True, help='enedis username')
-    parser.add_argument('-p', '--password',
-                        required=True, help='Password')
+    parser.add_argument("-u", "--username", required=True, help="enedis username")
+    parser.add_argument("-p", "--password", required=True, help="Password")
     args = parser.parse_args()
 
     client = LinkyClient(args.username, args.password)
-
 
     try:
         client.fetch_data()
@@ -45,6 +43,5 @@ def main():
     print(json.dumps(client.get_data(), indent=2))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
-
