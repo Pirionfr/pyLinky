@@ -233,10 +233,9 @@ class LinkyClient(object):
 
     def get_data(self):
         data = {}
-        data["hourly"] = self.format_data(self._data["raw_hourly"], "%H:%M")
-        data["daily"] = self.format_data(self._data["raw_daily"], "%d %b")
-        data["monthly"] = self.format_data(self._data["raw_monthly"], "%b")
-        data["yearly"] = self.format_data(self._data["raw_yearly"], "%Y")
+        for data_kind in ("hourly", "daily", "monthly", "yearly"):
+            data[data_kind] = self.format_data(self._data["raw_" +
+                    data_kind])
 
         return data
 
