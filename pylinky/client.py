@@ -120,25 +120,25 @@ class LinkyClient(object):
 
         return json_output.get("graphe")
 
-    def _get_data_per_hour(self, start_date, end_date):
+    def get_data_per_hour(self, start_date, end_date):
         """Retreives hourly energy consumption data."""
         return self._format_data(
             self._get_data("urlCdcHeure", start_date, end_date), "hours", "%H:%M"
         )
 
-    def _get_data_per_day(self, start_date, end_date):
+    def get_data_per_day(self, start_date, end_date):
         """Retreives daily energy consumption data."""
         return self._format_data(
             self._get_data("urlCdcJour", start_date, end_date), "days", "%d %b"
         )
 
-    def _get_data_per_month(self, start_date, end_date):
+    def get_data_per_month(self, start_date, end_date):
         """Retreives monthly energy consumption data."""
         return self._format_data(
             self._get_data("urlCdcMois", start_date, end_date), "months", "%b"
         )
 
-    def _get_data_per_year(self):
+    def get_data_per_year(self):
         """Retreives yearly energy consumption data."""
         return self._format_data(self._get_data("urlCdcAn"), "years", "%Y")
 
@@ -183,25 +183,25 @@ class LinkyClient(object):
 
         today = datetime.date.today()
         # last 2 days
-        self._data["hourly"] = self._get_data_per_hour(
+        self._data["hourly"] = self.get_data_per_hour(
             (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
             today.strftime("%d/%m/%Y"),
         )
 
         # last 30 days
-        self._data["daily"] = self._get_data_per_day(
+        self._data["daily"] = self.get_data_per_day(
             (today - relativedelta(days=30)).strftime("%d/%m/%Y"),
             (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
         )
 
         # 12 last month
-        self._data["monthly"] = self._get_data_per_month(
+        self._data["monthly"] = self.get_data_per_month(
             (today - relativedelta(months=12)).strftime("%d/%m/%Y"),
             (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
         )
 
         # 12 last month
-        self._data["yearly"] = self._get_data_per_year()
+        self._data["yearly"] = self.get_data_per_year()
 
     def login(self):
         # Get http session
