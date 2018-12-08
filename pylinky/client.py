@@ -214,20 +214,17 @@ class LinkyClient(object):
         today = datetime.date.today()
         # last 2 days
         self._data["raw_hourly"] = self.get_data_per_hour(
-            (today - relativedelta(days=1)),
-            today,
+            (today - relativedelta(days=1)), today
         )
 
         # last 30 days
         self._data["raw_daily"] = self.get_data_per_day(
-            (today - relativedelta(days=30)),
-            (today - relativedelta(days=1)),
+            (today - relativedelta(days=30)), (today - relativedelta(days=1))
         )
 
         # 12 last month
         self._data["raw_monthly"] = self.get_data_per_month(
-            (today - relativedelta(months=12)),
-            (today - relativedelta(days=1)),
+            (today - relativedelta(months=12)), (today - relativedelta(days=1))
         )
 
         # 12 last month
@@ -240,8 +237,7 @@ class LinkyClient(object):
     def get_data(self):
         data = {}
         for data_kind in ("hourly", "daily", "monthly", "yearly"):
-            data[data_kind] = self.format_data(self._data["raw_" +
-                    data_kind])
+            data[data_kind] = self.format_data(self._data["raw_" + data_kind])
 
         return data
 
