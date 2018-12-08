@@ -51,23 +51,22 @@ class LinkyClient(object):
     def _post_login_page(self):
         """Login to enedis."""
         data = {
-            'IDToken1': self.username,
-            'IDToken2': self.password,
-            'SunQueryParamsString': base64.b64encode(b'realm=particuliers'),
-            'encoded': 'true',
-            'gx_charset': 'UTF-8'
+            "IDToken1": self.username,
+            "IDToken2": self.password,
+            "SunQueryParamsString": base64.b64encode(b"realm=particuliers"),
+            "encoded": "true",
+            "gx_charset": "UTF-8",
         }
 
         try:
-            self._session.post(LOGIN_URL,
-                                data=data,
-                                allow_redirects=False,
-                                timeout= self._timeout)
+            self._session.post(
+                LOGIN_URL, data=data, allow_redirects=False, timeout=self._timeout
+            )
 
         except OSError:
             raise PyLinkyError("Can not submit login form")
 
-        if 'iPlanetDirectoryPro' not in self._session.cookies:
+        if "iPlanetDirectoryPro" not in self._session.cookies:
             raise PyLinkyError("Login error: Please check your username/password.")
 
         return True
@@ -76,35 +75,39 @@ class LinkyClient(object):
         """Get data."""
 
         data = {
-            '_' + REQ_PART + '_dateDebut': start_date,
-            '_' + REQ_PART + '_dateFin': end_date
+            "_" + REQ_PART + "_dateDebut": start_date,
+            "_" + REQ_PART + "_dateFin": end_date,
         }
 
         params = {
-            'p_p_id': REQ_PART,
-            'p_p_lifecycle': 2,
-            'p_p_state': 'normal',
-            'p_p_mode': 'view',
-            'p_p_resource_id': p_p_resource_id,
-            'p_p_cacheability': 'cacheLevelPage',
-            'p_p_col_id': 'column-1',
-            'p_p_col_pos': 1,
-            'p_p_col_count': 3
+            "p_p_id": REQ_PART,
+            "p_p_lifecycle": 2,
+            "p_p_state": "normal",
+            "p_p_mode": "view",
+            "p_p_resource_id": p_p_resource_id,
+            "p_p_cacheability": "cacheLevelPage",
+            "p_p_col_id": "column-1",
+            "p_p_col_pos": 1,
+            "p_p_col_count": 3,
         }
 
         try:
-            raw_res = self._session.post(DATA_URL,
-                                         data=data,
-                                         params=params,
-                                         allow_redirects=False,
-                                         timeout=self._timeout)
+            raw_res = self._session.post(
+                DATA_URL,
+                data=data,
+                params=params,
+                allow_redirects=False,
+                timeout=self._timeout,
+            )
 
             if 300 <= raw_res.status_code < 400:
-                raw_res = self._session.post(DATA_URL,
-                                             data=data,
-                                             params=params,
-                                             allow_redirects=False,
-                                             timeout=self._timeout)
+                raw_res = self._session.post(
+                    DATA_URL,
+                    data=data,
+                    params=params,
+                    allow_redirects=False,
+                    timeout=self._timeout,
+                )
         except OSError:
             raise PyLinkyError("Can not get data")
         try:
@@ -112,26 +115,32 @@ class LinkyClient(object):
         except (OSError, json.decoder.JSONDecodeError):
             raise PyLinkyError("Could not get data")
 
-        if  json_output.get('etat').get('valeur') == 'erreur':
+        if json_output.get("etat").get("valeur") == "erreur":
             raise PyLinkyError("Could not get data")
 
-        return json_output.get('graphe')
+        return json_output.get("graphe")
 
     def _get_data_per_hour(self, start_date, end_date):
         """Retreives hourly energy consumption data."""
-        return self._format_data(self._get_data('urlCdcHeure', start_date, end_date), 'hours', "%H:%M")
+        return self._format_data(
+            self._get_data("urlCdcHeure", start_date, end_date), "hours", "%H:%M"
+        )
 
     def _get_data_per_day(self, start_date, end_date):
         """Retreives daily energy consumption data."""
-        return self._format_data(self._get_data('urlCdcJour', start_date, end_date), 'days', "%d %b")
+        return self._format_data(
+            self._get_data("urlCdcJour", start_date, end_date), "days", "%d %b"
+        )
 
     def _get_data_per_month(self, start_date, end_date):
         """Retreives monthly energy consumption data."""
-        return self._format_data(self._get_data('urlCdcMois', start_date, end_date), 'months', "%b")
+        return self._format_data(
+            self._get_data("urlCdcMois", start_date, end_date), "months", "%b"
+        )
 
     def _get_data_per_year(self):
         """Retreives yearly energy consumption data."""
-        return self._format_data(self._get_data('urlCdcAn'), 'years', "%Y")
+        return self._format_data(self._get_data("urlCdcAn"), "years", "%Y")
 
     def _format_data(self, data, format_data, time_format):
         result = []
@@ -141,21 +150,29 @@ class LinkyClient(object):
             return []
 
         # Extract start date and parse it
-        start_date = datetime.datetime.strptime(data.get("periode").get("dateDebut"), "%d/%m/%Y").date()
+        start_date = datetime.datetime.strptime(
+            data.get("periode").get("dateDebut"), "%d/%m/%Y"
+        ).date()
 
         # Calculate final start date using the "offset" attribute returned by the API
         inc = 1
-        if format_data == 'hours':
+        if format_data == "hours":
             inc = 0.5
 
-        kwargs = {format_data: data.get('decalage') * inc}
+        kwargs = {format_data: data.get("decalage") * inc}
         start_date = start_date - relativedelta(**kwargs)
 
         # Generate data
-        for ordre, value in enumerate(data.get('data')):
+        for ordre, value in enumerate(data.get("data")):
             kwargs = {format_data: ordre * inc}
-            result.append({"time": ((start_date + relativedelta(**kwargs)).strftime(time_format)),
-                           "conso": (value.get('valeur') if value.get('valeur') > 0 else 0)})
+            result.append(
+                {
+                    "time": (
+                        (start_date + relativedelta(**kwargs)).strftime(time_format)
+                    ),
+                    "conso": (value.get("valeur") if value.get("valeur") > 0 else 0),
+                }
+            )
 
         return result
 
@@ -166,16 +183,22 @@ class LinkyClient(object):
 
         today = datetime.date.today()
         # last 2 days
-        self._data["hourly"] = self._get_data_per_hour((today - relativedelta(days=1)).strftime("%d/%m/%Y"),
-                                                     today.strftime("%d/%m/%Y"))
+        self._data["hourly"] = self._get_data_per_hour(
+            (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+            today.strftime("%d/%m/%Y"),
+        )
 
         # last 30 days
-        self._data["daily"] = self._get_data_per_day((today - relativedelta(days=30)).strftime("%d/%m/%Y"),
-                                                       (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
+        self._data["daily"] = self._get_data_per_day(
+            (today - relativedelta(days=30)).strftime("%d/%m/%Y"),
+            (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+        )
 
         # 12 last month
-        self._data["monthly"] = self._get_data_per_month((today - relativedelta(months=12)).strftime("%d/%m/%Y"),
-                                                         (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
+        self._data["monthly"] = self._get_data_per_month(
+            (today - relativedelta(months=12)).strftime("%d/%m/%Y"),
+            (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+        )
 
         # 12 last month
         self._data["yearly"] = self._get_data_per_year()
