@@ -110,6 +110,17 @@ class LinkyClient(object):
                 )
         except OSError:
             raise PyLinkyError("Can not get data")
+
+        if raw_res.status_code == 200 and raw_res.text is not None:
+            if "Conditions d'utilisation" in raw_res.text:
+                raise PyLinkyError(
+                    "You need to accept the latest Terms of Use. Please manually log into the website, then come back."
+                )
+            if "Une erreur technique" in raw_res.text:
+                raise PyLinkyError(
+                    "A technical error has occurred on website. Data unavailable."
+                )
+
         try:
             json_output = raw_res.json()
         except (OSError, json.decoder.JSONDecodeError):
