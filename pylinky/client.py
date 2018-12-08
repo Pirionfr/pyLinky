@@ -74,6 +74,12 @@ class LinkyClient(object):
     def _get_data(self, p_p_resource_id, start_date=None, end_date=None):
         """Get data."""
 
+        if start_date is not None:
+            start_date = start_date.strftime("%d/%m/%Y")
+
+        if end_date is not None:
+            end_date = end_date.strftime("%d/%m/%Y")
+
         data = {
             "_" + REQ_PART + "_dateDebut": start_date,
             "_" + REQ_PART + "_dateFin": end_date,
@@ -208,20 +214,20 @@ class LinkyClient(object):
         today = datetime.date.today()
         # last 2 days
         self._data["raw_hourly"] = self.get_data_per_hour(
-            (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
-            today.strftime("%d/%m/%Y"),
+            (today - relativedelta(days=1)),
+            today,
         )
 
         # last 30 days
         self._data["raw_daily"] = self.get_data_per_day(
-            (today - relativedelta(days=30)).strftime("%d/%m/%Y"),
-            (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+            (today - relativedelta(days=30)),
+            (today - relativedelta(days=1)),
         )
 
         # 12 last month
         self._data["raw_monthly"] = self.get_data_per_month(
-            (today - relativedelta(months=12)).strftime("%d/%m/%Y"),
-            (today - relativedelta(days=1)).strftime("%d/%m/%Y"),
+            (today - relativedelta(months=12)),
+            (today - relativedelta(days=1)),
         )
 
         # 12 last month
