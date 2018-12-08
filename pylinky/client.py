@@ -121,6 +121,9 @@ class LinkyClient(object):
                     "A technical error has occurred on website. Data unavailable."
                 )
 
+        if raw_res.text is "":
+            raise PyLinkyError("No data")
+
         try:
             json_output = raw_res.json()
         except (OSError, json.decoder.JSONDecodeError):
