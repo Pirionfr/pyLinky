@@ -136,21 +136,33 @@ class LinkyClient(object):
 
     def get_data_per_hour(self, start_date, end_date):
         """Retreives hourly energy consumption data."""
-        return self._get_data("urlCdcHeure", start_date, end_date)
+        data = self._get_data("urlCdcHeure", start_date, end_date)
+        data["time_format"] = "%H:%M"
+        data["data_format"] = "hours"
+        return data
 
     def get_data_per_day(self, start_date, end_date):
         """Retreives daily energy consumption data."""
-        return self._get_data("urlCdcJour", start_date, end_date)
+        data = self._get_data("urlCdcJour", start_date, end_date)
+        data["time_format"] = "%d %b"
+        data["data_format"] = "days"
+        return data
 
     def get_data_per_month(self, start_date, end_date):
         """Retreives monthly energy consumption data."""
-        return self._get_data("urlCdcMois", start_date, end_date)
+        data = self._get_data("urlCdcMois", start_date, end_date)
+        data["time_format"] = "%b"
+        data["data_format"] = "months"
+        return data
 
     def get_data_per_year(self):
         """Retreives yearly energy consumption data."""
-        return self._get_data("urlCdcAn")
+        data = self._get_data("urlCdcAn")
+        data["time_format"] = "%Y"
+        data["data_format"] = "years"
+        return data
 
-    def format_data(self, data, format_data, time_format):
+    def format_data(self, data, time_format=None):
         result = []
 
         # Prevent from non existing data yet
@@ -161,6 +173,10 @@ class LinkyClient(object):
         start_date = datetime.datetime.strptime(
             data.get("periode").get("dateDebut"), "%d/%m/%Y"
         ).date()
+
+        if time_format is None:
+            time_format = data["time_format"]
+        format_data = data["data_format"]
 
         # Calculate final start date using the "offset" attribute returned by the API
         inc = 1
@@ -217,10 +233,10 @@ class LinkyClient(object):
 
     def get_data(self):
         data = {}
-        data["hourly"] = self.format_data(self._data["raw_hourly"], "hours", "%H:%M")
-        data["daily"] = self.format_data(self._data["raw_daily"], "days", "%d %b")
-        data["monthly"] = self.format_data(self._data["raw_monthly"], "months", "%b")
-        data["yearly"] = self.format_data(self._data["raw_yearly"], "years", "%Y")
+        data["hourly"] = self.format_data(self._data["raw_hourly"], "%H:%M")
+        data["daily"] = self.format_data(self._data["raw_daily"], "%d %b")
+        data["monthly"] = self.format_data(self._data["raw_monthly"], "%b")
+        data["yearly"] = self.format_data(self._data["raw_yearly"], "%Y")
 
         return data
 
