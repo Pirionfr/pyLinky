@@ -12,14 +12,12 @@ This library This is based on jeedom_linky, created by Outadoc (https://github.c
 Installation
 ------------
 
-The easiest way to install the library is using `pip <https://pip.pypa.io/en/stable/>`_::
-
-    pip install pylinky
-
-You can also download the source code and install it manually::
+Download the source code and install it manually::
 
     cd /path/to/pylinky/
     python setup.py install
+
+This pyLinky module is a fork of https://github.com/Pirionfr/pyLinky. The version available on pypi https://pypi.org/project/pylinky/ is the old/original version. I hope the two versions will merge someday. See https://github.com/Pirionfr/pyLinky/issues/9.
 
 Usage
 -----
