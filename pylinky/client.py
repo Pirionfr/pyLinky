@@ -1,4 +1,5 @@
 import json
+import simplejson
 import base64
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -11,6 +12,22 @@ DATA_URL = "{}/suivi-de-consommation".format(HOST)
 
 REQ_PART = "lincspartdisplaycdc_WAR_lincspartcdcportlet"
 
+HOURLY = "hourly" #half-hourly ?
+DAILY = "daily"
+MONTHLY = "monthly"
+YEARLY = "yearly"
+
+
+_DELTA = 'delta'
+_FORMAT = 'format'
+_RESSOURCE = 'ressource'
+_DURATION = 'duration'
+_MAP = {
+    _DELTA: {HOURLY: 'hours', DAILY: 'days', MONTHLY: 'months', YEARLY: 'years'},
+    _FORMAT: {HOURLY: "%H:%M", DAILY: "%d %b", MONTHLY: "%b", YEARLY: "%Y"},
+    _RESSOURCE: {HOURLY: 'urlCdcHeure', DAILY: 'urlCdcJour', MONTHLY: 'urlCdcMois', YEARLY: 'urlCdcAn'},
+    _DURATION: {HOURLY: 24, DAILY: 30, MONTHLY: 12, YEARLY: None}
+}
 
 class PyLinkyError(Exception):
     pass
@@ -46,14 +63,12 @@ class LinkyClient(object):
                                 data=data,
                                 allow_redirects=False,
                                 timeout= self._timeout)
-
         except OSError:
             raise PyLinkyError("Can not submit login form")
-
         if 'iPlanetDirectoryPro' not in self._session.cookies:
             raise PyLinkyError("Login error: Please check your username/password.")
-
         return True
+
 
     def _get_data(self, p_p_resource_id, start_date=None, end_date=None):
         """Get data."""
@@ -88,33 +103,18 @@ class LinkyClient(object):
                                              params=params,
                                              allow_redirects=False,
                                              timeout=self._timeout)
-        except OSError:
-            raise PyLinkyError("Can not get data")
+        except OSError as e:
+            raise PyLinkyError("Could not access enedis.fr: " + str(e))
         try:
             json_output = raw_res.json()
-        except (OSError, json.decoder.JSONDecodeError):
-            raise PyLinkyError("Could not get data")
+        except (OSError, json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError) as e:
+            raise PyLinkyError("Impossible to decode response: " + str(e) + "\nResponse was: " + str(raw_res.text))
 
         if  json_output.get('etat').get('valeur') == 'erreur':
-            raise PyLinkyError("Could not get data")
+            raise PyLinkyError("Enedis.fr answered with an error: " + str(json_output))
 
         return json_output.get('graphe')
 
-    def _get_data_per_hour(self, start_date, end_date):
-        """Retreives hourly energy consumption data."""
-        return self._format_data(self._get_data('urlCdcHeure', start_date, end_date), 'hours', "%H:%M")
-
-    def _get_data_per_day(self, start_date, end_date):
-        """Retreives daily energy consumption data."""
-        return self._format_data(self._get_data('urlCdcJour', start_date, end_date), 'days', "%d %b")
-
-    def _get_data_per_month(self, start_date, end_date):
-        """Retreives monthly energy consumption data."""
-        return self._format_data(self._get_data('urlCdcMois', start_date, end_date), 'months', "%b")
-
-    def _get_data_per_year(self):
-        """Retreives yearly energy consumption data."""
-        return self._format_data(self._get_data('urlCdcAn'), 'years', "%Y")
 
     def _format_data(self, data, format_data, time_format):
         result = []
@@ -141,30 +141,39 @@ class LinkyClient(object):
                            "conso": (value.get('valeur') if value.get('valeur') > 0 else 0)})
 
         return result
+    
+    def get_data_per_period(self, period_type=HOURLY, start=None, end=None):
+        today = datetime.date.today()
+        if start is None:
+            kwargs = {_MAP[_DELTA][period_type]: _MAP[_DURATION][period_type]}
+            if period_type == YEARLY:
+                start = None
+            elif period_type == MONTHLY: #12 last complete months + current month
+                start = (today.replace(day=1) - relativedelta(**kwargs)).strftime("%d/%m/%Y")
+            else:
+                start = (today - relativedelta(**kwargs)).strftime("%d/%m/%Y")
+        if end is None:
+            if period_type == YEARLY:
+                end = None
+            elif period_type == HOURLY:
+                end = today.strftime("%d/%m/%Y")
+            else:
+                end = (today - relativedelta(days=1)).strftime("%d/%m/%Y")
+        return self._format_data(self._get_data(_MAP[_RESSOURCE][period_type], start, end), _MAP[_DELTA][period_type], _MAP[_FORMAT][period_type])
+
 
     def fetch_data(self):
         """Get the latest data from Enedis."""
         # Get http session
         self._get_httpsession()
+        
+        for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
+            self._data[t] = self.get_data_per_period(t)
 
-        today = datetime.date.today()
-        # last 2 days
-        self._data["hourly"] = self._get_data_per_hour((today - relativedelta(days=1)).strftime("%d/%m/%Y"),
-                                                     today.strftime("%d/%m/%Y"))
-
-        # last 30 days
-        self._data["daily"] = self._get_data_per_day((today - relativedelta(days=30)).strftime("%d/%m/%Y"),
-                                                       (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
-
-        # 12 last month
-        self._data["monthly"] = self._get_data_per_month((today - relativedelta(months=12)).strftime("%d/%m/%Y"),
-                                                         (today - relativedelta(days=1)).strftime("%d/%m/%Y"))
-
-        # 12 last month
-        self._data["yearly"] = self._get_data_per_year()
 
     def get_data(self):
         return self._data
+
 
     def close_session(self):
         """Close current session."""
