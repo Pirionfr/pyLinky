@@ -30,7 +30,7 @@ setup(
           ]
       },
       license='Apache 2.0',
-      install_requires=['python-dateutil','requests','simplejson'],
+      install_requires=['python-dateutil', 'requests', 'simplejson', 'fake_useragent'],
       classifiers=[
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
