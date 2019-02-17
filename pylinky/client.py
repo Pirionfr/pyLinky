@@ -4,6 +4,7 @@ import base64
 import datetime
 from dateutil.relativedelta import relativedelta
 import requests
+from fake_useragent import UserAgent
 
 
 LOGIN_URL = "https://espace-client-connexion.enedis.fr/auth/UI/Login"
@@ -12,7 +13,7 @@ DATA_URL = "{}/suivi-de-consommation".format(HOST)
 
 REQ_PART = "lincspartdisplaycdc_WAR_lincspartcdcportlet"
 
-HOURLY = "hourly" #half-hourly ?
+HOURLY = "hourly"
 DAILY = "daily"
 MONTHLY = "monthly"
 YEARLY = "yearly"
@@ -28,6 +29,7 @@ _MAP = {
     _RESSOURCE: {HOURLY: 'urlCdcHeure', DAILY: 'urlCdcJour', MONTHLY: 'urlCdcMois', YEARLY: 'urlCdcAn'},
     _DURATION: {HOURLY: 24, DAILY: 30, MONTHLY: 12, YEARLY: None}
 }
+
 
 class PyLinkyError(Exception):
     pass
@@ -45,7 +47,9 @@ class LinkyClient(object):
     def _get_httpsession(self):
         """Set http session."""
         if self._session is None:
-            self._session = requests.Session()
+            self._session = requests.session()
+            #adding fake user-agent header
+            self._session.headers.update({'User-agent': str(UserAgent().random)})
             self._post_login_page()
 
     def _post_login_page(self):
@@ -58,17 +62,17 @@ class LinkyClient(object):
             'gx_charset': 'UTF-8'
         }
 
+
         try:
             self._session.post(LOGIN_URL,
-                                data=data,
-                                allow_redirects=False,
-                                timeout= self._timeout)
+                               data=data,
+                               allow_redirects=False,
+                               timeout=self._timeout)
         except OSError:
             raise PyLinkyError("Can not submit login form")
         if 'iPlanetDirectoryPro' not in self._session.cookies:
             raise PyLinkyError("Login error: Please check your username/password.")
         return True
-
 
     def _get_data(self, p_p_resource_id, start_date=None, end_date=None):
         """Get data."""
@@ -110,11 +114,10 @@ class LinkyClient(object):
         except (OSError, json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError) as e:
             raise PyLinkyError("Impossible to decode response: " + str(e) + "\nResponse was: " + str(raw_res.text))
 
-        if  json_output.get('etat').get('valeur') == 'erreur':
+        if json_output.get('etat').get('valeur') == 'erreur':
             raise PyLinkyError("Enedis.fr answered with an error: " + str(json_output))
 
         return json_output.get('graphe')
-
 
     def _format_data(self, data, format_data, time_format):
         result = []
@@ -135,8 +138,8 @@ class LinkyClient(object):
         start_date = start_date - relativedelta(**kwargs)
 
         # Generate data
-        for ordre, value in enumerate(data.get('data')):
-            kwargs = {format_data: ordre * inc}
+        for order, value in enumerate(data.get('data')):
+            kwargs = {format_data: order * inc}
             result.append({"time": ((start_date + relativedelta(**kwargs)).strftime(time_format)),
                            "conso": (value.get('valeur') if value.get('valeur') > 0 else 0)})
 
@@ -148,7 +151,8 @@ class LinkyClient(object):
             kwargs = {_MAP[_DELTA][period_type]: _MAP[_DURATION][period_type]}
             if period_type == YEARLY:
                 start = None
-            elif period_type == MONTHLY: #12 last complete months + current month
+            # 12 last complete months + current month
+            elif period_type == MONTHLY:
                 start = (today.replace(day=1) - relativedelta(**kwargs)).strftime("%d/%m/%Y")
             else:
                 start = (today - relativedelta(**kwargs)).strftime("%d/%m/%Y")
@@ -161,7 +165,6 @@ class LinkyClient(object):
                 end = (today - relativedelta(days=1)).strftime("%d/%m/%Y")
         return self._format_data(self._get_data(_MAP[_RESSOURCE][period_type], start, end), _MAP[_DELTA][period_type], _MAP[_FORMAT][period_type])
 
-
     def fetch_data(self):
         """Get the latest data from Enedis."""
         # Get http session
@@ -170,10 +173,8 @@ class LinkyClient(object):
         for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
             self._data[t] = self.get_data_per_period(t)
 
-
     def get_data(self):
         return self._data
-
 
     def close_session(self):
         """Close current session."""
