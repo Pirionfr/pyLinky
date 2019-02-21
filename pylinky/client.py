@@ -126,12 +126,17 @@ class LinkyClient(object):
 
         return json_output.get('graphe')
 
-    def _format_data(self, data, format_data, time_format):
+    def format_data(self, data, time_format=None):
         result = []
 
         # Prevent from non existing data yet
         if not data:
             return []
+
+        period_type = data['period_type']
+        if time_format is None:
+            time_format = _MAP[_FORMAT][period_type]
+        format_data = _MAP[_DELTA][period_type]
 
         # Extract start date and parse it
         start_date = datetime.datetime.strptime(data.get("periode").get("dateDebut"), "%d/%m/%Y").date()
@@ -170,7 +175,11 @@ class LinkyClient(object):
                 end = today.strftime("%d/%m/%Y")
             else:
                 end = (today - relativedelta(days=1)).strftime("%d/%m/%Y")
-        return self._format_data(self._get_data(_MAP[_RESSOURCE][period_type], start, end), _MAP[_DELTA][period_type], _MAP[_FORMAT][period_type])
+
+        data = self._get_data(_MAP[_RESSOURCE][period_type], start, end)
+        data['period_type'] = period_type
+
+        return data
 
     def fetch_data(self):
         """Get the latest data from Enedis."""
@@ -185,7 +194,10 @@ class LinkyClient(object):
         self._get_httpsession()
 
     def get_data(self):
-        return self._data
+        formatted_data = dict()
+        for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
+            formatted_data[t] = self.format_data(self._data[t])
+        return formatted_data
 
     def close_session(self):
         """Close current session."""
