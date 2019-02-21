@@ -113,6 +113,9 @@ class LinkyClient(object):
         if raw_res.text is "":
             raise PyLinkyError("No data")
 
+        if 302 == raw_res.status_code and "/messages/maintenance.html" in raw_res.text:
+            raise PyLinkyError("Site in maintenance")
+
         try:
             json_output = raw_res.json()
         except (OSError, json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError) as e:
