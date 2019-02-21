@@ -165,16 +165,21 @@ class LinkyClient(object):
                 start = None
             # 12 last complete months + current month
             elif period_type == MONTHLY:
-                start = (today.replace(day=1) - relativedelta(**kwargs)).strftime("%d/%m/%Y")
+                start = (today.replace(day=1) - relativedelta(**kwargs))
             else:
-                start = (today - relativedelta(**kwargs)).strftime("%d/%m/%Y")
+                start = (today - relativedelta(**kwargs))
         if end is None:
             if period_type == YEARLY:
                 end = None
             elif period_type == HOURLY:
-                end = today.strftime("%d/%m/%Y")
+                end = today
             else:
-                end = (today - relativedelta(days=1)).strftime("%d/%m/%Y")
+                end = (today - relativedelta(days=1))
+
+        if start is not None:
+            start = start.strftime("%d/%m/%Y")
+        if end is not None:
+            end = end.strftime("%d/%m/%Y")
 
         data = self._get_data(_MAP[_RESSOURCE][period_type], start, end)
         data['period_type'] = period_type
