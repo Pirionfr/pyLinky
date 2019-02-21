@@ -109,6 +109,10 @@ class LinkyClient(object):
                                              timeout=self._timeout)
         except OSError as e:
             raise PyLinkyError("Could not access enedis.fr: " + str(e))
+
+        if raw_res.text is "":
+            raise PyLinkyError("No data")
+
         try:
             json_output = raw_res.json()
         except (OSError, json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError) as e:
