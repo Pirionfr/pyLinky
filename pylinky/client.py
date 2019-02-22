@@ -109,6 +109,13 @@ class LinkyClient(object):
                                              timeout=self._timeout)
         except OSError as e:
             raise PyLinkyError("Could not access enedis.fr: " + str(e))
+
+        if raw_res.text is "":
+            raise PyLinkyError("No data")
+
+        if 302 == raw_res.status_code and "/messages/maintenance.html" in raw_res.text:
+            raise PyLinkyError("Site in maintenance")
+
         try:
             json_output = raw_res.json()
         except (OSError, json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError) as e:
@@ -119,12 +126,17 @@ class LinkyClient(object):
 
         return json_output.get('graphe')
 
-    def _format_data(self, data, format_data, time_format):
+    def format_data(self, data, time_format=None):
         result = []
 
         # Prevent from non existing data yet
         if not data:
             return []
+
+        period_type = data['period_type']
+        if time_format is None:
+            time_format = _MAP[_FORMAT][period_type]
+        format_data = _MAP[_DELTA][period_type]
 
         # Extract start date and parse it
         start_date = datetime.datetime.strptime(data.get("periode").get("dateDebut"), "%d/%m/%Y").date()
@@ -153,17 +165,26 @@ class LinkyClient(object):
                 start = None
             # 12 last complete months + current month
             elif period_type == MONTHLY:
-                start = (today.replace(day=1) - relativedelta(**kwargs)).strftime("%d/%m/%Y")
+                start = (today.replace(day=1) - relativedelta(**kwargs))
             else:
-                start = (today - relativedelta(**kwargs)).strftime("%d/%m/%Y")
+                start = (today - relativedelta(**kwargs))
         if end is None:
             if period_type == YEARLY:
                 end = None
             elif period_type == HOURLY:
-                end = today.strftime("%d/%m/%Y")
+                end = today
             else:
-                end = (today - relativedelta(days=1)).strftime("%d/%m/%Y")
-        return self._format_data(self._get_data(_MAP[_RESSOURCE][period_type], start, end), _MAP[_DELTA][period_type], _MAP[_FORMAT][period_type])
+                end = (today - relativedelta(days=1))
+
+        if start is not None:
+            start = start.strftime("%d/%m/%Y")
+        if end is not None:
+            end = end.strftime("%d/%m/%Y")
+
+        data = self._get_data(_MAP[_RESSOURCE][period_type], start, end)
+        data['period_type'] = period_type
+
+        return data
 
     def fetch_data(self):
         """Get the latest data from Enedis."""
@@ -173,8 +194,15 @@ class LinkyClient(object):
         for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
             self._data[t] = self.get_data_per_period(t)
 
+    def login(self):
+        # Get http session
+        self._get_httpsession()
+
     def get_data(self):
-        return self._data
+        formatted_data = dict()
+        for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
+            formatted_data[t] = self.format_data(self._data[t])
+        return formatted_data
 
     def close_session(self):
         """Close current session."""
