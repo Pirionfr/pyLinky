@@ -15,7 +15,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
       name='pylinky',
-      version='0.2.1',
+      version='0.3.0',
       description='Get your consumption data from your Enedis account (www.enedis.fr)',
       long_description=long_description,
       author='Dimitri Capitaine',

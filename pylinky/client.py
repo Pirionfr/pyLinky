@@ -48,7 +48,7 @@ class LinkyClient(object):
         """Set http session."""
         if self._session is None:
             self._session = requests.session()
-            #adding fake user-agent header
+            # adding fake user-agent header
             self._session.headers.update({'User-agent': str(UserAgent().random)})
             self._post_login_page()
 
@@ -156,7 +156,7 @@ class LinkyClient(object):
                            "conso": (value.get('valeur') if value.get('valeur') > 0 else 0)})
 
         return result
-    
+
     def get_data_per_period(self, period_type=HOURLY, start=None, end=None):
         today = datetime.date.today()
         if start is None:
@@ -188,9 +188,7 @@ class LinkyClient(object):
 
     def fetch_data(self):
         """Get the latest data from Enedis."""
-        # Get http session
-        self._get_httpsession()
-        
+
         for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
             self._data[t] = self.get_data_per_period(t)
 

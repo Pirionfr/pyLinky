@@ -4,6 +4,7 @@ import json
 
 from pylinky import LinkyClient
 
+
 def main():
     """Main function"""
     parser = argparse.ArgumentParser()
@@ -15,8 +16,8 @@ def main():
 
     client = LinkyClient(args.username, args.password)
 
-
     try:
+        client.login()
         client.fetch_data()
     except BaseException as exp:
         print(exp)
