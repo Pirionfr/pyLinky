@@ -44,13 +44,13 @@ class LinkyClient(object):
         self._data = {}
         self._timeout = timeout
 
-    def _get_httpsession(self):
+    def login(self):
         """Set http session."""
         if self._session is None:
             self._session = requests.session()
             # adding fake user-agent header
             self._session.headers.update({'User-agent': str(UserAgent().random)})
-            self._post_login_page()
+        return self._post_login_page()
 
     def _post_login_page(self):
         """Login to enedis."""
@@ -61,7 +61,6 @@ class LinkyClient(object):
             'encoded': 'true',
             'gx_charset': 'UTF-8'
         }
-
 
         try:
             self._session.post(LOGIN_URL,
@@ -139,7 +138,11 @@ class LinkyClient(object):
         format_data = _MAP[_DELTA][period_type]
 
         # Extract start date and parse it
-        start_date = datetime.datetime.strptime(data.get("periode").get("dateDebut"), "%d/%m/%Y").date()
+        if 'periode' in data:
+            periode = data.get("periode")
+            if not periode:
+                return []
+            start_date = datetime.datetime.strptime(periode.get("dateDebut"), "%d/%m/%Y").date()
 
         # Calculate final start date using the "offset" attribute returned by the API
         inc = 1
@@ -191,10 +194,6 @@ class LinkyClient(object):
 
         for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
             self._data[t] = self.get_data_per_period(t)
-
-    def login(self):
-        # Get http session
-        self._get_httpsession()
 
     def get_data(self):
         formatted_data = dict()
