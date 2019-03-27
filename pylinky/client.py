@@ -129,7 +129,7 @@ class LinkyClient(object):
         result = []
 
         # Prevent from non existing data yet
-        if not data:
+        if not data or not data.get("data"):
             return []
 
         period_type = data['period_type']
