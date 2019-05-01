@@ -36,6 +36,12 @@ class PyLinkyError(Exception):
 
 
 class LinkyClient(object):
+    
+    PERIOD_DAILY = DAILY
+    PERIOD_MONTHLY = MONTHLY
+    PERIOD_YEARLY = YEARLY
+    PERIOD_HOURLY = HOURLY
+    
     def __init__(self, username, password, session=None, timeout=None):
         """Initialize the client object."""
         self.username = username
@@ -187,21 +193,23 @@ class LinkyClient(object):
         data = self._get_data(_MAP[_RESSOURCE][period_type], start, end)
         data['period_type'] = period_type
 
+        self._data[period_type] = data
         return data
 
     def fetch_data(self):
         """Get the latest data from Enedis."""
-
         for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
-            self._data[t] = self.get_data_per_period(t)
+            self.get_data_per_period(t)
 
     def get_data(self):
         formatted_data = dict()
         for t in [HOURLY, DAILY, MONTHLY, YEARLY]:
-            formatted_data[t] = self.format_data(self._data[t])
+            if t in self._data:
+                formatted_data[t] = self.format_data(self._data[t])
         return formatted_data
 
     def close_session(self):
         """Close current session."""
         self._session.close()
         self._session = None
+
