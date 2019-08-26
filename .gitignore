@@ -105,3 +105,6 @@ ENV/
 .idea
 .idea/
 *.iml
+
+# VS Code
+.vscode
