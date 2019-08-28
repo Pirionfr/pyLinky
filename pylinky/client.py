@@ -1,11 +1,15 @@
-import json
-import simplejson
 import base64
 import datetime
-from dateutil.relativedelta import relativedelta
+import json
+
 import requests
+import simplejson
+from dateutil.relativedelta import relativedelta
 from fake_useragent import UserAgent
 
+from .exceptions import (PyLinkyAccessException, PyLinkyEnedisException,
+                         PyLinkyException, PyLinkyMaintenanceException,
+                         PyLinkyWrongLoginException)
 
 LOGIN_URL = "https://espace-client-connexion.enedis.fr/auth/UI/Login"
 HOST = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers"
@@ -29,10 +33,6 @@ _MAP = {
     _RESSOURCE: {HOURLY: 'urlCdcHeure', DAILY: 'urlCdcJour', MONTHLY: 'urlCdcMois', YEARLY: 'urlCdcAn'},
     _DURATION: {HOURLY: 24, DAILY: 30, MONTHLY: 12, YEARLY: None}
 }
-
-
-class PyLinkyError(Exception):
-    pass
 
 
 class LinkyClient(object):
@@ -74,9 +74,9 @@ class LinkyClient(object):
                                allow_redirects=False,
                                timeout=self._timeout)
         except OSError:
-            raise PyLinkyError("Can not submit login form")
+            raise PyLinkyAccessException("Can not submit login form")
         if 'iPlanetDirectoryPro' not in self._session.cookies:
-            raise PyLinkyError("Login error: Please check your username/password.")
+            raise PyLinkyWrongLoginException("Login error: Please check your username/password.")
         return True
 
     def _get_data(self, p_p_resource_id, start_date=None, end_date=None):
@@ -113,21 +113,21 @@ class LinkyClient(object):
                                              allow_redirects=False,
                                              timeout=self._timeout)
         except OSError as e:
-            raise PyLinkyError("Could not access enedis.fr: " + str(e))
+            raise PyLinkyAccessException("Could not access enedis.fr: " + str(e))
 
         if raw_res.text is "":
-            raise PyLinkyError("No data")
+            raise PyLinkyException("No data")
 
         if 302 == raw_res.status_code and "/messages/maintenance.html" in raw_res.text:
-            raise PyLinkyError("Site in maintenance")
+            raise PyLinkyMaintenanceException("Site in maintenance")
 
         try:
             json_output = raw_res.json()
         except (OSError, json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError) as e:
-            raise PyLinkyError("Impossible to decode response: " + str(e) + "\nResponse was: " + str(raw_res.text))
+            raise PyLinkyException("Impossible to decode response: " + str(e) + "\nResponse was: " + str(raw_res.text))
 
         if json_output.get('etat').get('valeur') == 'erreur':
-            raise PyLinkyError("Enedis.fr answered with an error: " + str(json_output))
+            raise PyLinkyEnedisException("Enedis.fr answered with an error: " + str(json_output))
 
         return json_output.get('graphe')
 
@@ -212,4 +212,3 @@ class LinkyClient(object):
         """Close current session."""
         self._session.close()
         self._session = None
-
