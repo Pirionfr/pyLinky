@@ -47,33 +47,29 @@ class AbstractAuth:
 
     def refresh_tokens(self) -> Dict[str, Union[str, int]]:
         """Refresh and return new tokens."""
-        print("Refresh token")
         url = ENDPOINT_TOKEN_URL_PROD
         if (self.sandbox):
             url = ENDPOINT_TOKEN_URL_SANDBOX
         if self.redirect_url is not None:
             url = url + "?" + urlencode({'redirect_uri': self.redirect_url})
-        token = self._oauth.refresh_token(url, include_client_id=True, client_id=self.client_id, client_secret=self.client_secret, refresh_token=self._oauth.token)
+        token = self._oauth.refresh_token(url, include_client_id=True, client_id=self.client_id, client_secret=self.client_secret, refresh_token=self._oauth.token['refresh_token'])
 
         if self.token_updater is not None:
             self.token_updater(token)
 
         return token
 
-    def request_token(self, code) -> Dict[str, Union[str, int]]:
+    def request_tokens(self, code) -> Dict[str, Union[str, int]]:
         """return new tokens."""
-        print("Fetch new token")
         url = ENDPOINT_TOKEN_URL_PROD
         if (self.sandbox):
             url = ENDPOINT_TOKEN_URL_SANDBOX
-        print(self.redirect_url)
         if self.redirect_url is not None:
             url = url + "?" + urlencode({'redirect_uri': self.redirect_url})
         token = self._oauth.fetch_token(url, include_client_id=True, client_id=self.client_id, client_secret=self.client_secret, code=code)
 
         if self.token_updater is not None:
             self.token_updater(token)
-        print(self.redirect_url)
         return token
 
     def request(self, path: str, arguments: Dict[str, str]) -> Response:
@@ -81,7 +77,6 @@ class AbstractAuth:
         We don't use the built-in token refresh mechanism of OAuth2 session because
         we want to allow overriding the token refresh logic.
         """
-        print("request")
         url = METERING_DATA_BASE_URL_PROD
         if (self.sandbox):
             url = METERING_DATA_BASE_URL_SANDBOX
@@ -96,4 +91,8 @@ class AbstractAuth:
         except TokenExpiredError:
             self._oauth.token = self.refresh_tokens()
 
-            return self._oauth.request("GET", url, params=arguments)
+        return self._oauth.request("GET", url, params=arguments)
+
+    def close(self):
+        self._oauth.close()
+        self._oauth = None

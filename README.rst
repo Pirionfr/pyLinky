@@ -15,9 +15,20 @@ pyLinky
     :target: https://requires.io/github/Pirionfr/pyLinky/requirements/?branch=master
     :alt: Requirements Status
 
-Get your consumption data from your Enedis account (www.enedis.fr) 
+Get your consumption data from your Enedis account (www.enedis.fr)
 
-This library This is based on jeedom_linky, created by Outadoc (https://github.com/Asdepique777/jeedom_linky)
+In order to use the library, you need an account on https://datahub-enedis.fr/.
+You need to create a Data Connect Application and as of May 2020 you will get
+your client_id by mail and your client_secret by SMS after a week or so...
+With these credentials, you can only access the Sandbox environment... You need
+to sign a contract and probably wait more to get Production credentials...
+
+The library uses requests and requests_oauthlib to cope with the OAuth 2.0
+protocol. It uses an AbstractAuth class to let a developer override the refresh
+token function and route it via their own external service.
+It also let the storage of the token between sessions to the developer.
+
+
 
 Installation
 ------------
@@ -35,7 +46,7 @@ Usage
 -----
 Print your current data
 
-    pylinky -u <USERNAME> -p <PASSWORD>
+    pylinky -c <client_id> -s <client_secret> -u <redirect_url>
 
 Dev env
 -------

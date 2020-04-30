@@ -5,22 +5,12 @@ import json
 import requests
 import simplejson
 from dateutil.relativedelta import relativedelta
-from fake_useragent import UserAgent
 
 from .exceptions import (PyLinkyAccessException, PyLinkyEnedisException,
                          PyLinkyException, PyLinkyMaintenanceException,
                          PyLinkyWrongLoginException)
 
 from .abstractauth import AbstractAuth
-
-
-AUTHORIZE_URL_SANDBOX           = "https://gw.hml.api.enedis.fr/dataconnect/v1/oauth2/authorize"
-ENDPOINT_TOKEN_URL_SANDBOX      = "https://gw.hml.api.enedis.fr/v1/oauth2/token"
-METERING_DATA_BASE_URL_SANDBOX  = "https://gw.hml.api.enedis.fr"
-
-AUTHORIZE_URL_PROD              = "https://gw.prd.api.enedis.fr/dataconnect/v1/oauth2/authorize"
-ENDPOINT_TOKEN_URL_PROD         = "https://gw.prd.api.enedis.fr/v1/oauth2/token"
-METERING_DATA_BASE_URL_PROD     = "https://gw.prd.api.enedis.fr"
 
 SCOPE = {
 "ADDRESSES": "/v3/customers/usage_points/addresses",
@@ -49,7 +39,6 @@ _MAP = {
     _DURATION: {HOURLY: 24, DAILY: 30, MONTHLY: 12, YEARLY: None}
 }
 
-
 class LinkyClient(object):
 
     PERIOD_DAILY = DAILY
@@ -57,23 +46,17 @@ class LinkyClient(object):
     PERIOD_YEARLY = YEARLY
     PERIOD_HOURLY = HOURLY
 
-    def __init__(self, client_id, client_secret, redirect_url=None, authorize_duration="P1Y"):
+    def __init__(self, auth: AbstractAuth, authorize_duration="P1Y", ):
         """Initialize the client object."""
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.redirect_url = redirect_url
         self.authorize_duration = authorize_duration
-        self.token = None
-        self._data = {}
-        self._auth = None
+        self._auth = auth
 
     def get_authorisation_url(self):
-        self._auth = AbstractAuth(client_id=self.client_id, client_secret=self.client_secret, redirect_url=self.redirect_url)
         auth_url = self._auth.authorization_url(self.authorize_duration)
         return auth_url[0]
 
-    def request_token(self, code):
-        self._auth.request_token(code)
+    def request_tokens(self, code):
+        self._auth.request_tokens(code)
 
     def get_consumption_load_curve(self, usage_point_id, start, end):
         argument_dictionnary = {'usage_point_id':usage_point_id, 'start': start, 'end': end}
@@ -226,5 +209,4 @@ class LinkyClient(object):
 
     def close_session(self):
         """Close current session."""
-        self._session.close()
-        self._session = None
+        self._auth.close()

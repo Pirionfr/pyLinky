@@ -3,7 +3,7 @@ import sys
 import json
 from urllib.parse import urlparse, parse_qs
 
-from pylinky import LinkyClient
+from pylinky import LinkyClient, AbstractAuth
 
 import logging
 import contextlib
@@ -23,15 +23,15 @@ def main():
 
     '''Switches on logging of the requests module.'''
     HTTPConnection.debuglevel = 2
-
     logging.basicConfig()
     logging.getLogger().setLevel(logging.DEBUG)
     requests_log = logging.getLogger("requests.packages.urllib3")
     requests_log.setLevel(logging.DEBUG)
     requests_log.propagate = True
+    '''Switches on logging of the requests module.'''
 
-
-    client = LinkyClient(args.client_id, args.client_secret, args.redirect_url)
+    auth = AbstractAuth(client_id=args.client_id, client_secret=args.client_secret, redirect_url=args.redirect_url)
+    client = LinkyClient(auth)
 
     try:
         authorization_url = client.get_authorisation_url()
@@ -43,7 +43,11 @@ def main():
         usage_point_id = authorization_response_qa["usage_point_id"][0]
         state = authorization_response_qa["state"][0]
 
-        token = client.request_token(code)
+        token = client.request_tokens(code)
+        print(token)
+        # Not needed, just a test to make sure that refresh_tokens works
+        auth.refresh_tokens()
+        print(token)
 
         response = client.get_consumption_load_curve(usage_point_id, "2020-03-01", "2020-03-05")
         print(response.content)
@@ -68,10 +72,7 @@ def main():
         print(exp)
         return 1
     finally:
-        print ("finally")
-        #client.close_session()
-    #print(json.dumps(client.get_data(), indent=2))
-    print ("the end")
+        client.close_session()
 
 
 if __name__ == '__main__':
