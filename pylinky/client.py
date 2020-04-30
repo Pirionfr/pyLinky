@@ -11,11 +11,26 @@ from .exceptions import (PyLinkyAccessException, PyLinkyEnedisException,
                          PyLinkyException, PyLinkyMaintenanceException,
                          PyLinkyWrongLoginException)
 
-LOGIN_URL = "https://espace-client-connexion.enedis.fr/auth/UI/Login"
-HOST = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers"
-DATA_URL = "{}/suivi-de-consommation".format(HOST)
+from .abstractauth import AbstractAuth
 
-REQ_PART = "lincspartdisplaycdc_WAR_lincspartcdcportlet"
+
+AUTHORIZE_URL_SANDBOX           = "https://gw.hml.api.enedis.fr/dataconnect/v1/oauth2/authorize"
+ENDPOINT_TOKEN_URL_SANDBOX      = "https://gw.hml.api.enedis.fr/v1/oauth2/token"
+METERING_DATA_BASE_URL_SANDBOX  = "https://gw.hml.api.enedis.fr"
+
+AUTHORIZE_URL_PROD              = "https://gw.prd.api.enedis.fr/dataconnect/v1/oauth2/authorize"
+ENDPOINT_TOKEN_URL_PROD         = "https://gw.prd.api.enedis.fr/v1/oauth2/token"
+METERING_DATA_BASE_URL_PROD     = "https://gw.prd.api.enedis.fr"
+
+SCOPE = {
+"ADDRESSES": "/v3/customers/usage_points/addresses",
+"CONSUMPTION_LOAD_CURVE": "/v4/metering_data/consumption_load_curve",
+"CONTRACTS": "/v3/customers/usage_points/contracts",
+"CONTACT_DATA": "/v3/customers/contact_data",
+"DAILY_CONSUMPTION": "/v4/metering_data/daily_consumption",
+"DAILY_CONSUMPTION_MAX_POWER": "/v4/metering_data/daily_consumption_max_power",
+"IDENTITY": "/v3/customers/identity"
+}
 
 HOURLY = "hourly"
 DAILY = "daily"
@@ -36,48 +51,49 @@ _MAP = {
 
 
 class LinkyClient(object):
-    
+
     PERIOD_DAILY = DAILY
     PERIOD_MONTHLY = MONTHLY
     PERIOD_YEARLY = YEARLY
     PERIOD_HOURLY = HOURLY
-    
-    def __init__(self, username, password, session=None, timeout=None):
+
+    def __init__(self, client_id, client_secret, redirect_url=None, authorize_duration="P1Y"):
         """Initialize the client object."""
-        self.username = username
-        self.password = password
-        self._session = session
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_url = redirect_url
+        self.authorize_duration = authorize_duration
+        self.token = None
         self._data = {}
-        self._timeout = timeout
+        self._auth = None
 
-    def login(self):
-        """Set http session."""
-        if self._session is None:
-            self._session = requests.session()
-            # adding fake user-agent header
-            self._session.headers.update({'User-agent': str(UserAgent().random)})
-        return self._post_login_page()
+    def get_authorisation_url(self):
+        self._auth = AbstractAuth(client_id=self.client_id, client_secret=self.client_secret, redirect_url=self.redirect_url)
+        auth_url = self._auth.authorization_url(self.authorize_duration)
+        return auth_url[0]
 
-    def _post_login_page(self):
-        """Login to enedis."""
-        data = {
-            'IDToken1': self.username,
-            'IDToken2': self.password,
-            'SunQueryParamsString': base64.b64encode(b'realm=particuliers'),
-            'encoded': 'true',
-            'gx_charset': 'UTF-8'
-        }
+    def request_token(self, code):
+        self._auth.request_token(code)
 
-        try:
-            self._session.post(LOGIN_URL,
-                               data=data,
-                               allow_redirects=False,
-                               timeout=self._timeout)
-        except OSError:
-            raise PyLinkyAccessException("Can not submit login form")
-        if 'iPlanetDirectoryPro' not in self._session.cookies:
-            raise PyLinkyWrongLoginException("Login error: Please check your username/password.")
-        return True
+    def get_consumption_load_curve(self, usage_point_id, start, end):
+        argument_dictionnary = {'usage_point_id':usage_point_id, 'start': start, 'end': end}
+        return self._auth.request("/v4/metering_data/consumption_load_curve", argument_dictionnary)
+
+    def get_production_load_curve(self, usage_point_id, start, end):
+        argument_dictionnary = {'usage_point_id':usage_point_id, 'start': start, 'end': end}
+        return self._auth.request("/v4/metering_data/production_load_curve", argument_dictionnary)
+
+    def get_daily_consumption_max_power(self, usage_point_id, start, end):
+        argument_dictionnary = {'usage_point_id':usage_point_id, 'start': start, 'end': end}
+        return self._auth.request("/v4/metering_data/daily_consumption_max_power", argument_dictionnary)
+
+    def get_daily_consumption(self, usage_point_id, start, end):
+        argument_dictionnary = {'usage_point_id':usage_point_id, 'start': start, 'end': end}
+        return self._auth.request("/v4/metering_data/daily_consumption", argument_dictionnary)
+
+    def get_daily_production(self, usage_point_id, start, end):
+        argument_dictionnary = {'usage_point_id':usage_point_id, 'start': start, 'end': end}
+        return self._auth.request("/v4/metering_data/daily_production", argument_dictionnary)
 
     def _get_data(self, p_p_resource_id, start_date=None, end_date=None):
         """Get data."""
