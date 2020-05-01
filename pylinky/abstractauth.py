@@ -39,11 +39,15 @@ class AbstractAuth:
             token_updater=token_updater,
         )
 
-    def authorization_url(self, duration=""):
+    def authorization_url(self, duration: str="", test_customer: str=""):
+        """test state will be appended to state for sandbox testing, it can be 0 to 9"""
         url = AUTHORIZE_URL_PROD
         if (self.sandbox):
             url = AUTHORIZE_URL_SANDBOX
-        return self._oauth.authorization_url(url, duration=duration)
+        state = self._oauth.new_state()
+        if test_customer:
+            state = state + test_customer
+        return self._oauth.authorization_url(url, duration=duration, state=state)
 
     def refresh_tokens(self) -> Dict[str, Union[str, int]]:
         """Refresh and return new tokens."""
@@ -81,9 +85,10 @@ class AbstractAuth:
         if (self.sandbox):
             url = METERING_DATA_BASE_URL_SANDBOX
         url = url + path
-
+        # This header is required by v3/customers, v4/metering data is ok with the default */*
+        headers = {'Accept': "application/json"}
         try:
-            response = self._oauth.request("GET", url, params=arguments)
+            response = self._oauth.request("GET", url, params=arguments, headers=headers)
             if (response.status_code == 403):
                 self._oauth.token = self.refresh_tokens()
             else:
@@ -91,7 +96,7 @@ class AbstractAuth:
         except TokenExpiredError:
             self._oauth.token = self.refresh_tokens()
 
-        return self._oauth.request("GET", url, params=arguments)
+        return self._oauth.request("GET", url, params=arguments, headers=headers)
 
     def close(self):
         self._oauth.close()

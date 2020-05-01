@@ -51,8 +51,8 @@ class LinkyClient(object):
         self.authorize_duration = authorize_duration
         self._auth = auth
 
-    def get_authorisation_url(self):
-        auth_url = self._auth.authorization_url(self.authorize_duration)
+    def get_authorisation_url(self, test_customer=""):
+        auth_url = self._auth.authorization_url(self.authorize_duration, test_customer=test_customer)
         return auth_url[0]
 
     def request_tokens(self, code):
@@ -77,6 +77,26 @@ class LinkyClient(object):
     def get_daily_production(self, usage_point_id, start, end):
         argument_dictionnary = {'usage_point_id':usage_point_id, 'start': start, 'end': end}
         return self._auth.request("/v4/metering_data/daily_production", argument_dictionnary)
+
+    def get_customer_identity(self, usage_point_id):
+        argument_dictionnary = {'usage_point_id': usage_point_id}
+        return self._auth.request("/v3/customers/identity", argument_dictionnary)
+
+    def get_customer_contact_data(self, usage_point_id):
+        argument_dictionnary = {'usage_point_id': usage_point_id}
+        return self._auth.request("/v3/customers/contact_data", argument_dictionnary)
+
+    def get_customer_usage_points_contracts(self, usage_point_id):
+        argument_dictionnary = {'usage_point_id': usage_point_id}
+        return self._auth.request("/v3/customers/usage_points/contracts", argument_dictionnary)
+
+    def get_customer_usage_points_addresses(self, usage_point_id):
+        argument_dictionnary = {'usage_point_id': usage_point_id}
+        return self._auth.request("/v3/customers/usage_points/addresses", argument_dictionnary)
+
+
+
+
 
     def _get_data(self, p_p_resource_id, start_date=None, end_date=None):
         """Get data."""

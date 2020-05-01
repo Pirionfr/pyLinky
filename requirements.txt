@@ -3,4 +3,3 @@ requests
 requests_oauthlib
 oauthlib
 simplejson
-fake_useragent

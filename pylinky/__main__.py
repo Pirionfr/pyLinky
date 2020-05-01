@@ -18,56 +18,89 @@ def main():
                         required=True, help='Client Secret from Enedis')
     parser.add_argument('-u', '--redirect-url',
                         required=True, help='Redirect URL as stated in the Enedis admin console')
+    parser.add_argument('-t', '--test-consumer',
+                        required=False, help='Test consumer for sandbox 0-9')
+    parser.add_argument('-v', '--verbose',
+                        required=False, action='store_true', help='Verbose, debug network calls')
     args = parser.parse_args()
 
+    if (args.verbose):
+        '''Switches on logging of the requests module.'''
+        HTTPConnection.debuglevel = 2
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.DEBUG)
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.DEBUG)
+        requests_log.propagate = True
 
-    '''Switches on logging of the requests module.'''
-    HTTPConnection.debuglevel = 2
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(logging.DEBUG)
-    requests_log.propagate = True
-    '''Switches on logging of the requests module.'''
+    test_consumer = args.test_consumer
 
     auth = AbstractAuth(client_id=args.client_id, client_secret=args.client_secret, redirect_url=args.redirect_url)
     client = LinkyClient(auth)
 
     try:
-        authorization_url = client.get_authorisation_url()
-        print("Please go to {} and authorize access.".format(authorization_url))
-        authorization_response = input("Enter the full callback URL")
+        authorization_url = client.get_authorisation_url(test_customer=test_consumer)
+        print("Please go to \n{}\nand authorize access.".format(authorization_url))
+        authorization_response = input("Enter the full callback URL :\n")
         authorization_response_qa = parse_qs(urlparse(authorization_response).query)
 
         code = authorization_response_qa["code"][0]
-        usage_point_id = authorization_response_qa["usage_point_id"][0]
         state = authorization_response_qa["state"][0]
 
         token = client.request_tokens(code)
-        print(token)
         # Not needed, just a test to make sure that refresh_tokens works
-        auth.refresh_tokens()
-        print(token)
+        token = auth.refresh_tokens()
 
-        response = client.get_consumption_load_curve(usage_point_id, "2020-03-01", "2020-03-05")
-        print(response.content)
-        input("Press a key")
+        usage_point_ids = token['usage_points_id'].split(",")
 
-        response = client.get_production_load_curve(usage_point_id, "2020-03-01", "2020-03-05")
-        print(response.content)
-        input("Press a key")
+        for usage_point_id in usage_point_ids:
+            print(usage_point_id)
 
-        response = client.get_daily_consumption_max_power(usage_point_id, "2020-03-01", "2020-03-05")
-        print(response.content)
-        input("Press a key")
+            response = client.get_customer_identity(usage_point_id)
+            print("get_customer_identity")
+            print(response.content)
+            #input("Press a key")
 
-        response = client.get_daily_consumption(usage_point_id, "2020-03-01", "2020-03-05")
-        print(response.content)
-        input("Press a key")
+            response = client.get_customer_contact_data(usage_point_id)
+            print("get_customer_contact_data")
+            print(response.content)
+            #input("Press a key")
 
-        response = client.get_daily_production(usage_point_id, "2020-03-01", "2020-03-05")
-        print(response.content)
-        input("Press a key to exit")
+            response = client.get_customer_usage_points_contracts(usage_point_id)
+            print("get_customer_usage_points_contracts")
+            print(response.content)
+            #input("Press a key")
+
+            response = client.get_customer_usage_points_addresses(usage_point_id)
+            print("get_customer_usage_points_addresses")
+            print(response.content)
+            #input("Press a key")
+
+            response = client.get_consumption_load_curve(usage_point_id, "2020-03-01", "2020-03-05")
+            print("get_consumption_load_curve")
+            print(response.content)
+            #input("Press a key")
+
+            response = client.get_production_load_curve(usage_point_id, "2020-03-01", "2020-03-05")
+            print("get_production_load_curve")
+            print(response.content)
+            #input("Press a key")
+
+            response = client.get_daily_consumption_max_power(usage_point_id, "2020-03-01", "2020-03-05")
+            print("get_daily_consumption_max_power")
+            print(response.content)
+            #input("Press a key")
+
+            response = client.get_daily_consumption(usage_point_id, "2020-03-01", "2020-03-05")
+            print("get_daily_consumption")
+            print(response.content)
+            #input("Press a key")
+
+            response = client.get_daily_production(usage_point_id, "2020-03-01", "2020-03-05")
+            print("get_daily_production")
+            print(response.content)
+            #input("Press a key")
+
     except BaseException as exp:
         print(exp)
         return 1
