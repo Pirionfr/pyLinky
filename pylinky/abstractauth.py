@@ -98,6 +98,12 @@ class AbstractAuth:
 
         return self._oauth.request("GET", url, params=arguments, headers=headers)
 
+    def get_usage_point_ids(self):
+        if not self._oauth.token or not self._oauth.token.get("usage_points_id"):
+            return []
+        return self._oauth.token['usage_points_id'].split(",")
+
     def close(self):
-        self._oauth.close()
+        if self._oauth:
+            self._oauth.close()
         self._oauth = None
