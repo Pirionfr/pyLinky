@@ -15,7 +15,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
       name='pylinky',
-      version='0.4.0',
+      version='0.5.0',
       description='Get your consumption data from your Enedis account (www.enedis.fr)',
       long_description=long_description,
       author='Dimitri Capitaine',
@@ -30,9 +30,10 @@ setup(
           ]
       },
       license='Apache 2.0',
-      install_requires=['python-dateutil', 'requests', 'simplejson', 'fake_useragent'],
+      install_requires=['python-dateutil', 'requests', 'simplejson', 'requests_oauthlib', 'oauthlib'],
       classifiers=[
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
       ]
 )
